@@ -2,6 +2,10 @@
   text-align: center;
 }
 
+.display-row {
+  padding: 10px;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -35,4 +39,33 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.building-button {
+  padding: 10px;
+  border-bottom: 1px solid black;
+  cursor: pointer;
+}
+
+.building-button:hover {
+  background: #aaa;
+}
+
+.close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 25px;
+  width: 25px;
+  line-height: 25px;
+  background: goldenrod;
+  cursor: pointer;
+  text-align: center;
+  padding: 5px;
+  border-bottom: 5px solid goldenrod;
+  border-left: 5px solid goldenrod;
+}
+
+.close-button:hover {
+  background: red;
 }
