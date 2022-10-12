@@ -127,8 +127,6 @@ export class Pop {
     // Move to new board
     this.board = dest;
     this.board.pops.push(this);
-
-    console.log('Successfully migrated!');
   }
 
   checkGrowth (board: Board, log: LogFunction) {
@@ -139,7 +137,7 @@ export class Pop {
         const freeHouse = board.buildings.find((building) => building.residents.length < building.housingCapacity);
         if (!freeHouse) return;
 
-        if (board.consumeOrFail('food', 80 / this.stats.con)) {
+        if (board.consumeOrFail({ 'food': 80 / this.stats.con })) {
           const newPop = new Pop(board);
           log(`${this.id} birthed ${newPop.id}`);
           board.pops.push(
@@ -274,6 +272,29 @@ export class Job {
   }
 }
 
+export class Builder extends Job {
+  constructor (building: Building) {
+    super(building);
+    this.name = 'builder';
+  }
+
+  tickHandlers (pop: Pop, board: Board): PrioritizedHandler[] {
+    return [
+      new PrioritizedHandler(
+        3,
+        () => {
+          if (board.consumeOrFail(this.building.buildTickCost)) {
+            this.building.progress += 1;
+            if (this.building.progress >= this.building.maxProgress) {
+              this.building.finishBuilding();
+            }
+          }
+        }
+      )
+    ]
+  }
+}
+
 export class Building {
   kind: string;
   inventorySize: { [g: string]: number };
@@ -284,16 +305,26 @@ export class Building {
   rotation: number;
   position: Coordinate | null;
   board: Board | null;
-  storage: { [g: string]: number };
-  currentProduction: { [g: string]: number };
+  storage: GoodMap;
+  currentProduction: GoodMap;
 
+  progress: number;
+  maxProgress: number;
+  buildTickCost: GoodMap;
+  eventualJobs: Job[];
+  
   // Shape is an array of offsets
   constructor () {
     this.kind = 'basic';
     this.inventorySize = {};
     this.housingCapacity = 0;
     this.baseShape = [{x: 0, y: 0}];
-    this.jobs = [];
+    this.jobs = [new Builder(this)];
+    this.eventualJobs = [];
+
+    this.progress = 0;
+    this.maxProgress = 20;
+    this.buildTickCost = { 'wood': 10 };
     
     this.rotation = 0;
     this.position = null; // initially null
@@ -305,6 +336,13 @@ export class Building {
     // Surplus _this round_.
     this.storage = {};
     this.residents = [];
+  }
+
+  finishBuilding () {
+    this.jobs.forEach((job) => {
+      job.empty();
+    });
+    this.jobs = this.eventualJobs;
   }
 
   destroy () {
@@ -461,13 +499,14 @@ class TurnoverMap {
     }
   }
 
-  decrementLastOrFail (g: string, n: number) {
-    if (g in this.last && this.last[g] >= n) {
-      this.last[g] -= n;
+  decrementLastOrFail (g: GoodMap) {
+    if (Object.keys(g).every((k) => this.last[k] >= g[k])) {
+      Object.keys(g).forEach((k) => {
+        this.last[k] -= g[k];
+      });
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 }
 
@@ -544,8 +583,8 @@ export class Board {
     return { amount, available };
   }
 
-  consumeOrFail (good: string, maxAmount: number) {
-    return this.surplus.decrementLastOrFail(good, maxAmount);
+  consumeOrFail (goods: GoodMap) {
+    return this.surplus.decrementLastOrFail(goods);
   }
 
   produce (good: string, amount: number, storage = false, isImport = false) {

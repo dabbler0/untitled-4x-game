@@ -6,7 +6,7 @@ export class Encampment extends Building {
     this.kind = 'encampment';
     this.housingCapacity = 2;
     this.baseShape = [{x: 0, y: 0, t: 'encampment'}];
-    this.jobs = []
+    this.eventualJobs = []
     this.inventorySize = { 'food': 1000 };
     this.store('food', 1000);
     this.produce('food', 20);
@@ -94,7 +94,7 @@ export class Loggery extends Building {
       {x: 0, y: 1, t: 'loggery'},
       {x: 1, y: 0, t: 'loggery'}
     ];
-    this.jobs = [ new Lumberjack(this) ];
+    this.eventualJobs = [ new Lumberjack(this) ];
   }
 
   canPlaceOn (cells: Cell[]) {
@@ -131,7 +131,7 @@ export class Fishery extends Building {
       {x: -1, y: 2 },
       {x: 1, y: 1 }
     ];
-    this.jobs = [ new Fisher(this) ];
+    this.eventualJobs = [ new Fisher(this) ];
   }
 
   canPlaceOn (cells: Cell[]) {
@@ -168,7 +168,7 @@ export class Farm extends Building {
       {x: 1, y: 0, t: 'farm'},
       {x: 1, y: 1, t: 'farm'},
     ];
-    this.jobs = [ new Farmer(this) ];
+    this.eventualJobs = [ new Farmer(this) ];
   }
 
   canPlaceOn (cells: Cell[]) {
@@ -189,7 +189,7 @@ export class IrrigatedFarm extends Building {
       {x: 1, y: -1, t: 'irrigatedFarm'},
       {x: -1, y: 1, t: 'irrigatedFarm'},
     ];
-    this.jobs = [ new Farmer(this) ];
+    this.eventualJobs = [ new Farmer(this) ];
   }
 
   canPlaceOn (cells: Cell[]) {
@@ -210,7 +210,7 @@ export class GatheringHut extends Building {
       {x: 1, y: -1, },
       {x: -1, y: 1, },
     ];
-    this.jobs = [ new Farmer(this) ];
+    this.eventualJobs = [ new Farmer(this) ];
   }
 
   canPlaceOn (cells: Cell[]) {
@@ -314,7 +314,7 @@ export class Trader extends Job {
           });
 
           for (const key in bestPrices) {
-            ownBoard.setPriceToAtLeast(key, Math.max(0, bestPrices[key] - 1));
+            ownBoard.setPriceToAtLeast(key, Math.max(0, bestPrices[key] - 10));
           }
 
           // Amp prices to match demand
@@ -327,7 +327,7 @@ export class Trader extends Job {
               if (!(key in ownBoard.localPrices)) ownBoard.localPrices[key] = 1;
               ownBoard.localPrices[key] += 1;
             }
-            else if (ownBoard.demand.last[key] < production * 0.6) {
+            else if (ownBoard.demand.last[key] < production * 0.9) {
               ownBoard.localPrices[key] = Math.max(ownBoard.localPrices[key] - 1, 0);
             }
           }
@@ -368,7 +368,7 @@ export class TradingPost extends Building {
       {x: 0, y: 0, t: 'tradingPost'},
       {x: 0, y: 1, t: 'tradingPost'}
     ];
-    this.jobs = [ new Trader(this) ];
+    this.eventualJobs = [ new Trader(this) ];
   }
 }
 
@@ -383,7 +383,7 @@ export class Storehouse extends Building {
     this.inventorySize = {
       food: 1000,
     };
-    this.jobs = [ new Warehouser(this) ];
+    this.eventualJobs = [ new Warehouser(this) ];
   }
 }
 
@@ -421,7 +421,7 @@ export class ExpeditionBase extends Building {
     this.inventorySize = {
       food: 1000,
     };
-    this.jobs = [ new Colonist(this) ];
+    this.eventualJobs = [ new Colonist(this) ];
   }
 
 }

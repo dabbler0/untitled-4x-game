@@ -181,7 +181,27 @@ export class CanvasRenderer {
   sum ({x: x1, y: y1}: Coordinate, {x: x2, y: y2}: Coordinate) {
     return {x: x1 + x2, y: y1 + y2};
   }
-  
+  equal ({x: x1, y: y1}: Coordinate, {x: x2, y: y2}: Coordinate) {
+    return x1 === x2 && y1 === y2;
+  }
+
+  drawBar (center: Coordinate, scale: number, current: number, max: number) {
+    this.ctx.fillStyle = 'red';
+    this.ctx.fillRect(
+      center.x - scale / 2,
+      center.y - scale / 20,
+      scale,
+      scale / 10
+    );
+    this.ctx.fillStyle = 'green';
+    this.ctx.fillRect(
+      center.x - scale / 2,
+      center.y - scale / 20,
+      scale * current / max,
+      scale / 10
+    );
+  }
+
   renderBoard (board: Board,
       scale = this.scale,
       offset = { x: this.canvas.width / 2, y: this.canvas.height / 2},
@@ -204,6 +224,17 @@ export class CanvasRenderer {
         stroke,
         cell.building ? buildingIconMap[cell.building.kind] : null,
       );
+      if (cell.building && this.equal(cell.position, cell.building!.position!) && cell.building.progress < cell.building.maxProgress) {
+        this.drawBar(
+          this.sum(
+            offset,
+            this.gridToCartesian(cell.position, scale)
+          ),
+          scale,
+          cell.building.progress,
+          cell.building.maxProgress
+        );
+      }
     });
   }
 
@@ -234,6 +265,27 @@ export class CanvasRenderer {
         (cell.board.buildings.length > 0 ? 'yellow' : 'black')
         : null
       );
+
+      if (cell.board.buildings.length > 0) {
+        this.ctx.globalAlpha = 0.5;
+        this.drawHex(
+          this.sum(
+            offset,
+            this.gridToCartesian(plus(
+              cell.position,
+              globe.boardCenter(cell.board.position)
+            ), scale)
+          ),
+          scale,
+          'yellow',
+          (Math.abs(cell.position.x + cell.position.y) >= cell.board.radius ||
+          Math.abs(cell.position.x) >= cell.board.radius ||
+          Math.abs(cell.position.y) >= cell.board.radius) ?
+          (cell.board.buildings.length > 0 ? 'yellow' : 'black')
+          : null
+        );
+        this.ctx.globalAlpha = 1;
+      }
     });
   }
   
